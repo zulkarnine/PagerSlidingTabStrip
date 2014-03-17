@@ -39,6 +39,10 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+// additional imports for center alignment
+import android.view.WindowManager;
+import android.view.Display;
+import android.graphics.Point;
 import java.util.Locale;
 
 import com.astuetz.pagerslidingtabstrip.R;
