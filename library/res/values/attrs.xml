@@ -13,6 +13,10 @@
         <attr name="pstsTabBackground" format="reference" />
         <attr name="pstsShouldExpand" format="boolean" />
         <attr name="pstsTextAllCaps" format="boolean" />
+        
+        <!--added attribute for center alignment-->
+        <attr name="pstsTabCenterAligned" format="boolean" />
+        
     </declare-styleable>
 
 </resources>
