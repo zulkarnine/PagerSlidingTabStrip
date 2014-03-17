@@ -92,6 +92,12 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 	private Typeface tabTypeface = null;
 	private int tabTypefaceStyle = Typeface.BOLD;
 
+// newly added for center alignment
+	private boolean tabCenterAligned = true;
+	
+//needs display width
+	private int layoutWidth;
+
 	private int lastScrollX = 0;
 
 	private int tabBackgroundResId = R.drawable.background_tab;
@@ -133,6 +139,15 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
 		tabTextSize = a.getDimensionPixelSize(0, tabTextSize);
 		tabTextColor = a.getColor(1, tabTextColor);
+		
+		// newly added for center alignment
+		WindowManager wManager = (WindowManager) context
+				.getSystemService(Context.WINDOW_SERVICE);
+		Display display = wManager.getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+
+		layoutWidth = size.x;
 
 		a.recycle();
 
@@ -151,6 +166,15 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		shouldExpand = a.getBoolean(R.styleable.PagerSlidingTabStrip_pstsShouldExpand, shouldExpand);
 		scrollOffset = a.getDimensionPixelSize(R.styleable.PagerSlidingTabStrip_pstsScrollOffset, scrollOffset);
 		textAllCaps = a.getBoolean(R.styleable.PagerSlidingTabStrip_pstsTextAllCaps, textAllCaps);
+
+		// newly added part for center alignment
+		tabCenterAligned = a.getBoolean(
+				R.styleable.PagerSlidingTabStrip_pstsTabCenterAligned,
+				tabCenterAligned);
+		
+		if (tabCenterAligned) {
+			scrollOffset = layoutWidth / 2;
+		}
 
 		a.recycle();
 
@@ -218,7 +242,14 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 				}
 
 				currentPosition = pager.getCurrentItem();
-				scrollToChild(currentPosition, 0);
+				
+				//modified to check if center alignment is true
+				if (tabCenterAligned) {
+					scrollToChild2(currentPosition, 0);
+				}else {
+					scrollToChild(currentPosition, 0);
+				}
+				
 			}
 		});
 
@@ -303,6 +334,57 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		}
 
 	}
+	
+	
+	//The method to scroll but still keeping the tab center aligned
+	private void scrollToChild2(int position, float offset) {
+
+		if (tabCount == 0) {
+			return;
+		}
+
+
+		int cellWidth = tabsContainer.getChildAt(position).getWidth();
+
+		int newScrollX = lastScrollX;
+
+
+		if (offset < 0.01 && offset > -0.01) {
+			if (position + 1 <= tabCount - 1) {
+				newScrollX = (int) (tabsContainer.getChildAt(position)
+						.getLeft() + cellWidth / 2 + (float) ((cellWidth + tabsContainer
+						.getChildAt(position + 1).getWidth() / 2) * offset));
+			} else {
+				newScrollX = (int) (tabsContainer.getChildAt(position)
+						.getLeft() + cellWidth / 2 + (float) ((cellWidth + tabsContainer
+						.getChildAt(position).getWidth()) * offset) / 2);
+			}
+		} else {
+			if (position + 1 <= tabCount - 1) {
+				newScrollX = (int) (tabsContainer.getChildAt(position)
+						.getLeft() + (cellWidth * (float) (1 - offset)) / 2 + (float) ((cellWidth + tabsContainer
+						.getChildAt(position + 1).getWidth() / 2) * offset));
+			} else {
+				newScrollX = (int) (tabsContainer.getChildAt(position)
+						.getLeft() + (cellWidth * (float) (1 - offset)) / 2 + (float) ((cellWidth + tabsContainer
+						.getChildAt(position).getWidth()) * offset) / 2);
+			}
+		}
+		
+		
+		
+		if (position >= 0 || offset > 0.01) {
+
+			newScrollX -= scrollOffset;
+		}
+
+		if (newScrollX != lastScrollX) {
+			lastScrollX = newScrollX;
+			scrollTo(newScrollX, 0);
+		}
+
+
+	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
@@ -358,7 +440,14 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 			currentPosition = position;
 			currentPositionOffset = positionOffset;
 
-			scrollToChild(position, (int) (positionOffset * tabsContainer.getChildAt(position).getWidth()));
+			//modified to check for center alignment
+			
+			if (tabCenterAligned) {
+				scrollToChild2(position, positionOffset);
+			}else {
+				scrollToChild(position, (int) (positionOffset *
+						 tabsContainer.getChildAt(position).getWidth()));
+			}
 
 			invalidate();
 
@@ -370,7 +459,13 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		@Override
 		public void onPageScrollStateChanged(int state) {
 			if (state == ViewPager.SCROLL_STATE_IDLE) {
-				scrollToChild(pager.getCurrentItem(), 0);
+			
+			//modified to check for center alignment
+				if (tabCenterAligned) {
+					scrollToChild2(pager.getCurrentItem(), 0);
+				}else {
+					scrollToChild(pager.getCurrentItem(), 0);
+				}
 			}
 
 			if (delegatePageListener != null) {
